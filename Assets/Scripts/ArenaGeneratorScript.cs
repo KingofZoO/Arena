@@ -16,9 +16,11 @@ public class ArenaGeneratorScript : MonoBehaviour
     private int nameCount = -1;
 
     private int triangRowCount = 5;
-    [SerializeField] private int ringCount = 6;
+    private int ringCount = 6;
 
-    private void Awake()
+    private List<Vector2> unitPositions = new List<Vector2>();
+
+    public void GenerateArena()
     {
         StartPreparation();
         GenerateHexagonMap();
@@ -45,19 +47,23 @@ public class ArenaGeneratorScript : MonoBehaviour
 
         for (int j = 1; j <= ringCount; j++)
         {
+            int posNum = ringCount / 2;
             Vector2 pos = new Vector2(2 * hexHalfWidth * j, 0);
             Vector2 delt = new Vector2(2 * hexHalfWidth, 0);
-            float angle = 120f;
+            int angle = 120;
 
             for (int i = 0; i < 6; i++)
             {
                 delt = Quaternion.Euler(0, 0, angle) * delt;
                 for (int k = 0; k < j; k++)
                 {
+                    if (j == ringCount && k % posNum == 0)
+                        unitPositions.Add(pos);
+
                     CreateHex(pos, j);
                     pos += delt;
                 }
-                angle = 60f;
+                angle = 60;
             }
         }
     }
@@ -85,6 +91,7 @@ public class ArenaGeneratorScript : MonoBehaviour
         arena = new GameObject("Arena");
         arena.AddComponent<ArenaPathScript>();
         arena.AddComponent<UnitMovingScript>();
+
         hexSprite = Hex.GetComponent<SpriteRenderer>();
         CalcHalfHeight();
         CalcHalfWidth();
@@ -103,5 +110,10 @@ public class ArenaGeneratorScript : MonoBehaviour
     public int RingCount
     {
         get { return ringCount; }
+    }
+
+    public List<Vector2> UnitPositions
+    {
+        get { return unitPositions; }
     }
 }

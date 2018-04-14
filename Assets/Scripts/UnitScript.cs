@@ -2,14 +2,19 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class UnitScript : MonoBehaviour
+public abstract class UnitScript : MonoBehaviour
 {
     protected int actionPoints;
     protected int currActionPoints;
 
-    public void GetAction()
+    protected int damagePoints;
+    public int healthPoints;
+
+    protected abstract void SetParameters();
+
+    public void GetAction(int actionCost)
     {
-        currActionPoints -= 1;
+        currActionPoints -= actionCost;
     }
 
     public void RefreshAP()
@@ -17,8 +22,23 @@ public class UnitScript : MonoBehaviour
         currActionPoints = actionPoints;
     }
 
+    public void TakeDamage(int damage)
+    {
+        healthPoints -= damage;
+    }
+
     public int CurrentActionPoints
     {
         get { return currActionPoints; }
+    }
+
+    public int DamagePoints
+    {
+        get { return damagePoints; }
+    }
+
+    public int HealthPoints
+    {
+        get { return healthPoints; }
     }
 }

@@ -75,13 +75,13 @@ public class ArenaPathScript : MonoBehaviour
             RaycastHit2D checkUnitHit = Physics2D.Raycast(castPoint, Vector2.zero, Mathf.Infinity, unitLayer);
             if (checkUnitHit.collider)
             {
-                //break;
-                Vector2 vec = (mousePos - tempPos).normalized * hexDist;
+                break;
+                /*Vector2 vec = (mousePos - tempPos).normalized * hexDist;
 
                 var angle = (Mathf.Atan2(mousePos.y, mousePos.x) - Mathf.Atan2(tempPos.y, tempPos.x)) * Mathf.Rad2Deg;
 
                 vec = Quaternion.Euler(0, 0, angle > 0 ? 45f : -45f) * vec;
-                castPoint = tempPos + vec;
+                castPoint = tempPos + vec;*/
             }
 
             RaycastHit2D hit = Physics2D.Raycast(castPoint, Vector2.zero, Mathf.Infinity, hexLayer);
@@ -112,9 +112,9 @@ public class ArenaPathScript : MonoBehaviour
             Vector2 castPoint = tempPos + (objPos - tempPos).normalized * hexDist;
 
             RaycastHit2D checkUnitHit = Physics2D.Raycast(castPoint, Vector2.zero, Mathf.Infinity, unitLayer);
-            //if (checkUnitHit.collider)
-              //  break;
-            if (checkUnitHit.collider && checkUnitHit.collider.tag == "Hero")
+            if (checkUnitHit.collider)
+                break;
+            /*if (checkUnitHit.collider && checkUnitHit.collider.tag == "Hero")
             {
                 break;
             }
@@ -126,7 +126,7 @@ public class ArenaPathScript : MonoBehaviour
 
                 vec = Quaternion.Euler(0, 0, angle > 0 ? 60f : -60f) * vec;
                 castPoint = tempPos + vec;
-            }
+            }*/
 
             RaycastHit2D hit = Physics2D.Raycast(castPoint, Vector2.zero, Mathf.Infinity, hexLayer);
             if (hit.collider)

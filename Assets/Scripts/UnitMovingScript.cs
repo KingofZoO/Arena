@@ -4,6 +4,10 @@ using UnityEngine;
 
 public class UnitMovingScript : MonoBehaviour
 {
+    private Transform targetUnit;
+    private int attackCost = 1;
+    private UnitScript targetScript;
+
     private Transform unit;
     private List<Transform> units = new List<Transform>();
     private ArenaPathScript arenaPath;
@@ -11,7 +15,9 @@ public class UnitMovingScript : MonoBehaviour
     private UnitScript unitScript;
     private LayerMask unitLayer;
 
-    private float movingSpeed = 0.05f;
+    private int moveCost = 1;
+    private float movingSpeed = 0.15f;
+    private float sqrPositionLimit = 0.01f;
     private bool isMoving = false;
     private bool isStarted = false;
 
@@ -26,11 +32,7 @@ public class UnitMovingScript : MonoBehaviour
         arenaPath = GetComponent<ArenaPathScript>();
         unitLayer = 1 << LayerMask.NameToLayer("Unit");
 
-        foreach (var obj in GameObject.FindGameObjectsWithTag("Hero"))
-            units.Add(obj.transform);
-
-        foreach (var obj in GameObject.FindGameObjectsWithTag("Enemy"))
-            units.Add(obj.transform);
+        units = MainScript.Instance.GetUnitGeneratorScript.GetUnitList;
     }
 
     private void Update()
@@ -44,13 +46,17 @@ public class UnitMovingScript : MonoBehaviour
 
         if (Input.GetMouseButtonDown(1))
         {
-            isMoving = true;
-            TurnPassed();
+            SelectTarget();
         }
 
-        if (isMoving)
+        if (Input.GetMouseButtonDown(1))
         {
-            MoveUnit();
+            isMoving = true;
+        }
+
+        if (Input.GetMouseButtonDown(2))
+        {
+            SkipTurn();
         }
 
         if (unit != null && Time.frameCount % 5 == 0)
@@ -60,10 +66,21 @@ public class UnitMovingScript : MonoBehaviour
         }
     }
 
+    private void FixedUpdate()
+    {
+        if (isMoving || isEnemyTurn)
+        {
+            MoveUnit();
+        }
+    }
+
     private void SelectHero()
     {
         if (isMoving)
             return;
+
+        if (currHero >= units.Count)
+        currHero = 0;
 
         unit = units[currHero];
         unitScript = unit.GetComponent<UnitScript>();
@@ -75,12 +92,9 @@ public class UnitMovingScript : MonoBehaviour
         else if (unit.tag == "Enemy")
         {
             isEnemyTurn = true;
-            arenaPath.CastLineToObj(GetNearHero(), unitScript.CurrentActionPoints);
+            arenaPath.CastLineToObj(GetNearUnit(), unitScript.CurrentActionPoints);
         }
         currHero++;
-        if (currHero == units.Count)
-            currHero = 0;
-
         arenaPath.HighlightHex();
     }
 
@@ -91,68 +105,119 @@ public class UnitMovingScript : MonoBehaviour
 
         if (pathList.Count == 0)
         {
-            TurnEnded();
+            MoveEnded();
             return;
         }
 
         Vector3 endPos = pathList[currHex].position;
         Vector2 destinationPos = (endPos - unit.position).normalized * movingSpeed;
-        unit.position += new Vector3(destinationPos.x, destinationPos.y, 0);
+        unit.Translate(destinationPos);
         arenaPath.HighlightHex();
 
-        if (Mathf.Abs((unit.position - endPos).magnitude) <= movingSpeed)
+        if ((unit.position - endPos).sqrMagnitude <= sqrPositionLimit)
         {
             currHex++;
-            unitScript.GetAction();
+            unitScript.GetAction(moveCost);
             if (currHex == pathList.Count)
-                TurnEnded();
+            {
+                MoveEnded();
+            }
         }
     }
 
-    private Vector3 GetNearHero()
+    private Vector3 GetNearUnit()
     {
-        Vector3 nearHero = Vector3.zero;
+        Transform nearUnit = null;
         float dist = Mathf.Infinity;
 
         for(int i = 0; i < units.Count; i++)
         {
-            if (units[i].tag == "Hero" && Vector3.Distance(units[i].position, unit.position) < dist)
+            if (units[i] != unit && Vector3.Distance(units[i].position, unit.position) < dist)
             {
                 dist = Vector3.Distance(units[i].position, unit.position);
-                nearHero = units[i].position;
+                nearUnit = units[i];
             }
         }
-        return nearHero;
+
+        targetUnit = nearUnit;
+        targetScript = nearUnit.GetComponent<UnitScript>();
+
+        return nearUnit.position;
     }
 
-    private void TurnPassed()
+    private void SkipTurn()
     {
-        RaycastHit2D hit = Physics2D.Raycast(Camera.main.ScreenToWorldPoint(Input.mousePosition), Vector2.zero, Mathf.Infinity, unitLayer);
-        if (hit.collider && hit.transform == unit)
+        if (!isMoving && isHeroTurn)
         {
-            TurnEnded();
-            MovePassed();
+            MoveEnded();
+            TurnPassed();
         }
     }
 
-    private void TurnEnded()
+    private void MoveEnded()
     {
         isMoving = false;
         arenaPath.TurnEnded();
         currHex = 0;
         arenaPath.SelectNewHex(unit.position);
 
-        if (unitScript.CurrentActionPoints == 0 || unit.tag == "Enemy")
+        AttackTarget();
+
+        if (unitScript.CurrentActionPoints == 0)
         {
-            MovePassed();
+            TurnPassed();
         }
+
+        if (unit.tag == "Enemy")
+            arenaPath.CastLineToObj(GetNearUnit(), unitScript.CurrentActionPoints);
     }
 
-    private void MovePassed()
+    private void TurnPassed()
     {
         unitScript.RefreshAP();
         isHeroTurn = false;
         isEnemyTurn = false;
         SelectHero();
+    }
+
+    private void AttackTarget()
+    {
+        if (targetUnit == unit)
+        {
+            targetUnit = null;
+            targetScript = null;
+        }
+
+        if (targetUnit != null && unitScript.CurrentActionPoints >= attackCost)
+        {
+            unitScript.GetAction(attackCost);
+            targetScript.TakeDamage(unitScript.DamagePoints);
+
+            if (targetScript.HealthPoints <= 0)
+                KillTarget();
+
+            targetUnit = null;
+            targetScript = null;
+        }
+    }
+
+    private void KillTarget()
+    {
+        var index = units.IndexOf(targetUnit);
+        units.RemoveAt(index);
+        targetUnit.gameObject.SetActive(false);
+
+        if (index < currHero)
+            currHero--;
+    }
+
+    private void SelectTarget()
+    {
+        RaycastHit2D hit = Physics2D.Raycast(Camera.main.ScreenToWorldPoint(Input.mousePosition), Vector2.zero, Mathf.Infinity, unitLayer);
+        if (hit.collider && hit.transform != unit)
+        {
+            targetUnit = hit.transform;
+            targetScript = targetUnit.GetComponent<UnitScript>();
+        }
     }
 }
