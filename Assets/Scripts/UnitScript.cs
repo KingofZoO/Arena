@@ -8,7 +8,7 @@ public abstract class UnitScript : MonoBehaviour
     protected int currActionPoints;
 
     protected int damagePoints;
-    public int healthPoints;
+    protected int healthPoints;
 
     protected abstract void SetParameters();
 

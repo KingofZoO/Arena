@@ -8,6 +8,7 @@ public class MainScript : MonoBehaviour
 
     private ArenaGeneratorScript arenaGeneratorScript;
     private UnitGeneratorScript unitGeneratorScript;
+    private TurnOrderController turnOrderController;
 
     private void Awake()
     {
@@ -15,6 +16,7 @@ public class MainScript : MonoBehaviour
 
         arenaGeneratorScript = GetComponent<ArenaGeneratorScript>();
         unitGeneratorScript = GetComponent<UnitGeneratorScript>();
+        turnOrderController = GetComponent<TurnOrderController>();
     }
 
     public ArenaGeneratorScript GetArenaGeneratorScript
@@ -25,5 +27,10 @@ public class MainScript : MonoBehaviour
     public UnitGeneratorScript GetUnitGeneratorScript
     {
         get { return unitGeneratorScript; }
+    }
+
+    public TurnOrderController GetTurnOrderController
+    {
+        get { return turnOrderController; }
     }
 }

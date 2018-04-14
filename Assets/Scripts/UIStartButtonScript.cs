@@ -9,6 +9,9 @@ public class UIStartButtonScript : MonoBehaviour
         MainScript.Instance.GetArenaGeneratorScript.GenerateArena();
         MainScript.Instance.GetUnitGeneratorScript.GenerateUnits((int)UIStartPanelScript.Instance.UnitCountSlider.value, (int)UIStartPanelScript.Instance.AICountSlider.value, UIStartPanelScript.Instance.BattleTypeToggle.isOn);
 
+        PanelController.Instance.GetUnitPanel.gameObject.SetActive(true);
+        PanelController.Instance.GetTargetPanel.gameObject.SetActive(true);
+
         transform.parent.gameObject.SetActive(false);
     }
 }

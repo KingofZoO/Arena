@@ -9,7 +9,6 @@ public class UnitMovingScript : MonoBehaviour
     private UnitScript targetScript;
 
     private Transform unit;
-    private List<Transform> units = new List<Transform>();
     private ArenaPathScript arenaPath;
     private List<Transform> pathList = new List<Transform>();
     private UnitScript unitScript;
@@ -22,17 +21,17 @@ public class UnitMovingScript : MonoBehaviour
     private bool isStarted = false;
 
     private int currHex = 0;
-    private int currHero = 0;
 
     private bool isHeroTurn = false;
     private bool isEnemyTurn = false;
+
+    private TurnOrderController turnController;
 
     private void Start()
     {
         arenaPath = GetComponent<ArenaPathScript>();
         unitLayer = 1 << LayerMask.NameToLayer("Unit");
-
-        units = MainScript.Instance.GetUnitGeneratorScript.GetUnitList;
+        turnController = MainScript.Instance.GetTurnOrderController;
     }
 
     private void Update()
@@ -41,7 +40,7 @@ public class UnitMovingScript : MonoBehaviour
         {
             pathList = arenaPath.GetHitList;
             isStarted = true;
-            SelectHero();
+            SelectUnit();
         }
 
         if (Input.GetMouseButtonDown(1))
@@ -74,15 +73,12 @@ public class UnitMovingScript : MonoBehaviour
         }
     }
 
-    private void SelectHero()
+    private void SelectUnit()
     {
         if (isMoving)
             return;
 
-        if (currHero >= units.Count)
-        currHero = 0;
-
-        unit = units[currHero];
+        unit = turnController.GetWalkingUnit();
         unitScript = unit.GetComponent<UnitScript>();
         arenaPath.SelectNewHex(unit.position);
         if (unit.tag == "Hero")
@@ -94,7 +90,6 @@ public class UnitMovingScript : MonoBehaviour
             isEnemyTurn = true;
             arenaPath.CastLineToObj(GetNearUnit(), unitScript.CurrentActionPoints);
         }
-        currHero++;
         arenaPath.HighlightHex();
     }
 
@@ -127,18 +122,7 @@ public class UnitMovingScript : MonoBehaviour
 
     private Vector3 GetNearUnit()
     {
-        Transform nearUnit = null;
-        float dist = Mathf.Infinity;
-
-        for(int i = 0; i < units.Count; i++)
-        {
-            if (units[i] != unit && Vector3.Distance(units[i].position, unit.position) < dist)
-            {
-                dist = Vector3.Distance(units[i].position, unit.position);
-                nearUnit = units[i];
-            }
-        }
-
+        Transform nearUnit = turnController.GetNearUnit();
         targetUnit = nearUnit;
         targetScript = nearUnit.GetComponent<UnitScript>();
 
@@ -177,7 +161,7 @@ public class UnitMovingScript : MonoBehaviour
         unitScript.RefreshAP();
         isHeroTurn = false;
         isEnemyTurn = false;
-        SelectHero();
+        SelectUnit();
     }
 
     private void AttackTarget()
@@ -194,21 +178,11 @@ public class UnitMovingScript : MonoBehaviour
             targetScript.TakeDamage(unitScript.DamagePoints);
 
             if (targetScript.HealthPoints <= 0)
-                KillTarget();
+                turnController.KillTarget(targetUnit);
 
             targetUnit = null;
             targetScript = null;
         }
-    }
-
-    private void KillTarget()
-    {
-        var index = units.IndexOf(targetUnit);
-        units.RemoveAt(index);
-        targetUnit.gameObject.SetActive(false);
-
-        if (index < currHero)
-            currHero--;
     }
 
     private void SelectTarget()
