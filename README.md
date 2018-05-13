@@ -11,4 +11,6 @@ Scroll wheel button - pass your turn;
 
 Esc - show the pause menu;
 # Screenshots
-<Image src="images/Arena screenshot.jpg" width="600">
+<Image src="images/Arena_screen.jpg" width="600">
+<Image src="images/Inventory_screen.jpg" width="600">
+<Image src="images/Hero_custom_screen.jpg" width="600">
