@@ -4,4 +4,13 @@
 EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
-  m_Scenes: []
+  m_Scenes:
+  - enabled: 1
+    path: Assets/Scenes/CreatingHeroScene.unity
+    guid: 81992b74413353f489c5e808edb725eb
+  - enabled: 1
+    path: Assets/Scenes/InventoryScene.unity
+    guid: 3ee86ce2975ff9541bd144fdcd3d35e3
+  - enabled: 1
+    path: Assets/Scenes/ArenaScene.unity
+    guid: 27be07b2950aaaf4aa8c714a504ca78d
